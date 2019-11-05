@@ -1,0 +1,40 @@
+ScreenManager:
+    Ingredientes:
+        id: buscar
+    ListaReceitas
+        id: lista
+
+<Ingredientes>
+    BoxLayout:
+        padding: 20
+        orientation: 'vertical'
+
+        Label:
+            halign: 'center'
+            valign: 'middle'
+            markup: True
+            text: "[b]Receitas Legais\n\nEscreva no quadro, separando com enter, os ingredientes que você tem aí an sua casa, e quer usar na sua receita:[/b]"
+            text_size: self.size
+            size_hint_y: 2
+
+        TextInput:
+            id: ingredientes
+
+        AnchorLayout:
+            Button:
+                size_hint: (0.7, 0.5)
+                text: 'Tem todos esses?'
+                on_release: root.buscar_todos()
+
+        AnchorLayout:
+            Button:
+                size_hint: (0.7, 0.5)
+                text: 'Tem alguns desses'
+                on_release: root.buscar_alguns()
+
+<ListaReceitas>
+    ScrollView:
+        BoxLayout:
+            id: box
+            orientation: 'vertical'
+
