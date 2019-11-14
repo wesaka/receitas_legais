@@ -1,11 +1,9 @@
 import sqlite3
 
-from kivy.app import App
 from kivy.uix.screenmanager import ScreenManager, Screen
-from kivy.uix.recycleview import RecycleView
-from kivy.uix.label import Label
 from kivy.core.window import Window
-from receita import Receita
+from receita import Receita, ReceitaListaItem
+from datagrid import *
 
 
 # Cria a janela do menu principal
@@ -113,16 +111,7 @@ class Ingredientes(Screen):
         self.manager.transition.direction = 'left'
         self.manager.current = 'lista'
 
-
-
-
         # TODO Iterar para cada receita quais sao os ingredientes presentes
-
-
-# Classe para definir cada item da lista de receitas encontradas
-class LabelReceita(Label):
-    def on_touch_up(self, touch):
-        print(touch)
 
 
 # Cria a janela das receitas encontradas
@@ -131,7 +120,24 @@ class ListaReceitas(Screen):
         lista_receitas = App.get_running_app().temp
 
         for receita in lista_receitas:
-            self.ids.box.add_widget(LabelReceita(text=receita[0]))
+            self.ids.listaReceitas.add_row(ReceitaListaItem(receita[0]))
+
+    def mudar_para_detalhe(self):
+        self.manager.transition.direction = 'left'
+        self.manager.current = 'detalhe'
+
+
+class DetalheReceita(Screen):
+    def on_enter(self, *args):
+        # Carregar a lista de receitas para identificar a receita selecionada
+        # E também cerregar o index do item clicado na lista
+        # Dessa forma, conseguimos saber qual foi a receita clicada
+
+        lista_receitas = App.get_running_app().temp
+        selecionado = App.get_running_app().selecionado
+
+        item_selecionado = lista_receitas[int(selecionado)]
+        self.ids.idreceita.text = item_selecionado[0]
 
 
 # Classe do aplicativo
@@ -143,13 +149,16 @@ class ReceitasLegaisApp(App):
 
         buscar_ingredientes = Ingredientes(name='buscar')
         lista_receitas = ListaReceitas(name='lista')
+        detalhe_receita = DetalheReceita(name='detalhe')
 
         sm.add_widget(buscar_ingredientes)
         sm.add_widget(lista_receitas)
+        sm.add_widget(detalhe_receita)
 
         # variavel que servira para auxiliar na manipulacao de
         # conteudo entre diferentes janelas
         self.temp = None
+        self.selecionado = None
 
         # retorna a instancia do ScreenManager
         # como widget principal da aplicacao

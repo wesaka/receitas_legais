@@ -33,8 +33,13 @@ ScreenManager:
                 on_release: root.buscar_alguns()
 
 <ListaReceitas>
-    ScrollView:
-        BoxLayout:
-            id: box
-            orientation: 'vertical'
+    DataGrid:
+        id: listaReceitas
+        on_touch_down: root.mudar_para_detalhe()
+
+
+<DetalheReceita>
+    BoxLayout:
+        Label:
+            id: idreceita
 

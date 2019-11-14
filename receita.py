@@ -1,8 +1,18 @@
+from datagrid import DataGridDataClass
+
 # A classe 'Receita' possui, nesta ordem,
 # nome da receita,
 # quais os ingredientes nela
 # porcentagem de ingredientes presentes
 # se e possivel ou nao
+
+
+class ReceitaListaItem(DataGridDataClass):
+    def __init__(self, nome: str):
+        self.nome = nome
+
+    def get_lista(self):
+        return [str.capitalize(self.nome)]
 
 
 class Receita:
