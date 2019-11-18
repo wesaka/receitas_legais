@@ -19,7 +19,9 @@ class Ingredientes(Screen):
 
         # Carregar a joint na memoria para analisar quais receitas tem quais ingredientes
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM joint')
+
+        # Selecionar a tabela 'joint' - TODO lembrar de mudar a versão para produção depois
+        cursor.execute('SELECT * FROM joint_new')
         joint = cursor.fetchall()
 
         # Juntar cada receita num unico id com todos os ingredientes
@@ -36,13 +38,16 @@ class Ingredientes(Screen):
 
         # Carregar receitas do banco e montar uma lista
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM receitas')
+
+        # Selecionar a tabela 'receitas' para carregar todas as receitas - TODO lembrar de mudar para a versão de produção
+        cursor.execute('SELECT * FROM receitas_new')
         receitas_nomes = cursor.fetchall()
         for receita in receitas_nomes:
             self.lista_receitas.append(
                 Receita(receita[0],
                         receita[1],
-                        tuple(receitas_ids[receita[0]])
+                        tuple(receitas_ids[receita[0]]),
+                        receita[2]
                         )
             )
 
@@ -67,18 +72,28 @@ class Ingredientes(Screen):
                 continue
 
             cursor = conn.cursor()
-            cursor.execute("SELECT id FROM ingredientes WHERE ingrediente = ?", (ingrediente,))
+
+            # Selecionar os ingredientes da tabela 'ingredientes' - TODO mudar para a versão de produção
+            cursor.execute("SELECT id FROM ingredientes_new WHERE ingrediente = ?", (ingrediente,))
             ingredientes_ids.append(cursor.fetchall()[0][0])
 
         # Agora comparar e rankear as receitas com o maior numero de ingredientes presentes
-        # Salvar resultados num mapa chamado rank
-        rank = dict()
+        # Salvar resultados numa lista chamado rank, que contem o ID da receita e a porcentagem de itens existentes
+        rank = []
+        entregar = []
 
-        for receita in self.lista_receitas:
-            resultado = receita.presenca_ingredientes(tuple(ingredientes_ids))
-            rank[receita.nome] = float(resultado[2] / resultado[0])
+        for x in range(0, len(self.lista_receitas)):
+            resultado = self.lista_receitas[x].presenca_ingredientes(tuple(ingredientes_ids))
 
-        return sorted(rank.items(), key=lambda x: x[1], reverse=True)
+            rank.append((x, float(resultado[2]/resultado[0])))
+
+        sorted_rank = sorted(rank, key=lambda y: y[1], reverse=True)
+
+        for sorted_item in sorted_rank:
+            # Essa é a lista que entregamos no return
+            entregar.append((self.lista_receitas[sorted_item[0]], sorted_item[1]))
+
+        return entregar
 
     def buscar_todos(self):
         rank = self.buscar()
@@ -111,8 +126,6 @@ class Ingredientes(Screen):
         self.manager.transition.direction = 'left'
         self.manager.current = 'lista'
 
-        # TODO Iterar para cada receita quais sao os ingredientes presentes
-
 
 # Cria a janela das receitas encontradas
 class ListaReceitas(Screen):
@@ -120,13 +133,14 @@ class ListaReceitas(Screen):
         lista_receitas = App.get_running_app().temp
 
         for receita in lista_receitas:
-            self.ids.listaReceitas.add_row(ReceitaListaItem(receita[0]))
+            self.ids.listaReceitas.add_row(ReceitaListaItem(receita[0].nome))
 
     def mudar_para_detalhe(self):
         self.manager.transition.direction = 'left'
         self.manager.current = 'detalhe'
 
 
+# Aqui é onde montamos do detalhe da receita selecionada
 class DetalheReceita(Screen):
     def on_enter(self, *args):
         # Carregar a lista de receitas para identificar a receita selecionada
@@ -137,7 +151,9 @@ class DetalheReceita(Screen):
         selecionado = App.get_running_app().selecionado
 
         item_selecionado = lista_receitas[int(selecionado)]
-        self.ids.idreceita.text = item_selecionado[0]
+        self.ids.idreceita.text = item_selecionado[0].descricao
+
+        # TODO colocar bonito os ingredientes necessarios pra cada receita e quais ingredientes têm na tela anterior
 
 
 # Classe do aplicativo

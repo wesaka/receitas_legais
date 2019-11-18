@@ -16,10 +16,11 @@ class ReceitaListaItem(DataGridDataClass):
 
 
 class Receita:
-    def __init__(self, r_id: int, nome: str, ingredientes: tuple):
+    def __init__(self, r_id: int, nome: str, ingredientes: tuple, descricao: str):
         self.r_id = r_id
         self.nome = nome
         self.ingredientes = ingredientes
+        self.descricao = descricao
 
     # Retorna um tuple com quantos ingredientes a receita tem,
     # quantos eu quero,
