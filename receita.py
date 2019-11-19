@@ -8,11 +8,13 @@ from datagrid import DataGridDataClass
 
 
 class ReceitaListaItem(DataGridDataClass):
-    def __init__(self, nome: str):
+    def __init__(self, nome: str, total_ingredientes: int, ingredientes_encontrados: int):
         self.nome = nome
+        self.total_ingredientes = total_ingredientes
+        self.ingredientes_encontrados = ingredientes_encontrados
 
     def get_lista(self):
-        return [str.capitalize(self.nome)]
+        return [("%s - (%d / %d)" % (str.capitalize(self.nome), self.ingredientes_encontrados, self.total_ingredientes))]
 
 
 class Receita:

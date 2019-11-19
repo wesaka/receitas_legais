@@ -2,6 +2,7 @@ import sqlite3
 
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
+from kivy.uix.popup import Popup
 from receita import Receita, ReceitaListaItem
 from datagrid import *
 
@@ -20,7 +21,7 @@ class Ingredientes(Screen):
         # Carregar a joint na memoria para analisar quais receitas tem quais ingredientes
         cursor = conn.cursor()
 
-        # Selecionar a tabela 'joint' - TODO lembrar de mudar a versão para produção depois
+        # Selecionar a tabela 'joint'
         cursor.execute('SELECT * FROM joint_new')
         joint = cursor.fetchall()
 
@@ -39,7 +40,7 @@ class Ingredientes(Screen):
         # Carregar receitas do banco e montar uma lista
         cursor = conn.cursor()
 
-        # Selecionar a tabela 'receitas' para carregar todas as receitas - TODO lembrar de mudar para a versão de produção
+        # Selecionar a tabela 'receitas' para carregar todas as receitas
         cursor.execute('SELECT * FROM receitas_new')
         receitas_nomes = cursor.fetchall()
         for receita in receitas_nomes:
@@ -73,9 +74,15 @@ class Ingredientes(Screen):
 
             cursor = conn.cursor()
 
-            # Selecionar os ingredientes da tabela 'ingredientes' - TODO mudar para a versão de produção
+            # Selecionar os ingredientes da tabela 'ingredientes'
             cursor.execute("SELECT id FROM ingredientes_new WHERE ingrediente = ?", (ingrediente,))
-            ingredientes_ids.append(cursor.fetchall()[0][0])
+            data = cursor.fetchall()
+
+            if len(data) > 0:
+                ingredientes_ids.append(data[0][0])
+
+        if len(ingredientes_ids) == 0:
+            return []
 
         # Agora comparar e rankear as receitas com o maior numero de ingredientes presentes
         # Salvar resultados numa lista chamado rank, que contem o ID da receita e a porcentagem de itens existentes
@@ -85,19 +92,36 @@ class Ingredientes(Screen):
         for x in range(0, len(self.lista_receitas)):
             resultado = self.lista_receitas[x].presenca_ingredientes(tuple(ingredientes_ids))
 
-            rank.append((x, float(resultado[2]/resultado[0])))
+            rank.append((x, float(resultado[2]/resultado[0]), resultado[0], resultado[2]))
 
         sorted_rank = sorted(rank, key=lambda y: y[1], reverse=True)
 
         for sorted_item in sorted_rank:
             # Essa é a lista que entregamos no return
-            entregar.append((self.lista_receitas[sorted_item[0]], sorted_item[1]))
+            entregar.append((self.lista_receitas[sorted_item[0]],
+                             sorted_item[1],
+                             sorted_item[2],
+                             sorted_item[3]))
 
         return entregar
 
     def buscar_todos(self):
         rank = self.buscar()
         itens_possiveis = []
+
+        if len(rank) == 0:
+            popup = Popup(
+                content=Label(
+                    text='Desculpe. Não foi encontrada nenhuma receita com esses ingredientes, tente com outros.',
+                    halign='center',
+                    valign='middle',
+                    text_size=(180, 100)),
+                title='Ops!',
+                size_hint=(None, None),
+                size=(200, 200))
+            popup.open()
+
+            return
 
         for item in rank:
             if item[1] >= float(1.0):
@@ -109,6 +133,19 @@ class Ingredientes(Screen):
     def buscar_alguns(self):
         rank = self.buscar()
         itens_possiveis = []
+
+        if len(rank) == 0:
+            popup = Popup(
+                content=Label(text='Desculpe. Não foi encontrada nenhuma receita com esses ingredientes, tente com outros.',
+                                halign='center',
+                              valign='middle',
+                              text_size=(180, 100)),
+            title='Ops!',
+            size_hint=(None, None),
+            size=(200, 200))
+            popup.open()
+
+            return
 
         for item in rank:
             if item[1] > 0:
@@ -132,8 +169,10 @@ class ListaReceitas(Screen):
     def on_pre_enter(self, *args):
         lista_receitas = App.get_running_app().temp
 
+        self.ids.listaReceitas.set_header('Receita', 'Ingredientes')
+
         for receita in lista_receitas:
-            self.ids.listaReceitas.add_row(ReceitaListaItem(receita[0].nome))
+            self.ids.listaReceitas.add_row(ReceitaListaItem(receita[0].nome, receita[2], receita[3]))
 
     def mudar_para_detalhe(self):
         self.manager.transition.direction = 'left'
