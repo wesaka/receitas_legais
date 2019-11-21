@@ -3,6 +3,7 @@ import sqlite3
 from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.core.window import Window
 from kivy.uix.popup import Popup
+from kivy.uix.gridlayout import GridLayout
 from receita import Receita, ReceitaListaItem
 from datagrid import *
 
@@ -92,7 +93,7 @@ class Ingredientes(Screen):
         for x in range(0, len(self.lista_receitas)):
             resultado = self.lista_receitas[x].presenca_ingredientes(tuple(ingredientes_ids))
 
-            rank.append((x, float(resultado[2]/resultado[0]), resultado[0], resultado[2]))
+            rank.append((x, float(resultado[2] / resultado[0]), resultado[0], resultado[2]))
 
         sorted_rank = sorted(rank, key=lambda y: y[1], reverse=True)
 
@@ -136,13 +137,14 @@ class Ingredientes(Screen):
 
         if len(rank) == 0:
             popup = Popup(
-                content=Label(text='Desculpe. Não foi encontrada nenhuma receita com esses ingredientes, tente com outros.',
-                                halign='center',
-                              valign='middle',
-                              text_size=(180, 100)),
-            title='Ops!',
-            size_hint=(None, None),
-            size=(200, 200))
+                content=Label(
+                    text='Desculpe. Não foi encontrada nenhuma receita com esses ingredientes, tente com outros.',
+                    halign='center',
+                    valign='middle',
+                    text_size=(180, 100)),
+                title='Ops!',
+                size_hint=(None, None),
+                size=(200, 200))
             popup.open()
 
             return
@@ -190,7 +192,30 @@ class DetalheReceita(Screen):
         selecionado = App.get_running_app().selecionado
 
         item_selecionado = lista_receitas[int(selecionado)]
-        self.ids.idreceita.text = item_selecionado[0].descricao
+        # self.ids.idreceita.text = item_selecionado[0].descricao
+
+        # Adicionar os itens da receita (ingredientes e como fazer):
+
+        # Primeiro, pegar do banco quais são os nomes dos ingredientes:
+        conn = sqlite3.connect('receitas.sqlite')
+        cursor = conn.cursor()
+
+        cursor.execute(
+            'SELECT ingrediente, quantidade FROM ingredientes_new INNER JOIN joint_new ON joint_new.id_ingrediente = ingredientes_new.id WHERE ingredientes_new.id in ({0}) GROUP BY ingrediente'.format(
+                ', '.join('?' for _ in item_selecionado[0].ingredientes)), item_selecionado[0].ingredientes)
+        lista = cursor.fetchall()
+
+        # Agora, colocar cada ingrediente na tela, preparando o string completo
+        list_text = []
+        label: Label = self.ids.boxreceita
+
+        for item in lista:
+            list_text.append('%s - %s\n' % (str(item[0]).capitalize(), item[1]))
+
+        list_text.append('\n')
+        list_text.append(item_selecionado[0].descricao)
+
+        label.text = ''.join(list_text)
 
         # TODO colocar bonito os ingredientes necessarios pra cada receita e quais ingredientes têm na tela anterior
 

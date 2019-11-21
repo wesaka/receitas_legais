@@ -54,13 +54,13 @@ for key, value in lista_receitas.items():
     if key != 1:
         # Iterar os ingredientes e criar relacoes entre ingredientes e receitas
         for i in range(2, len(value)):
-            if i % 2 == 0 and value[i] not in lista_ingredientes:
-                lista_ingredientes.append(value[i])
+            if value[i] != ' ' and value[i] != '' and i % 2 == 0 and (value[i], value[i+1]) not in lista_ingredientes:
+                lista_ingredientes.append((value[i], value[i+1]))
 
 # Agora que carregamos todos os ingredientes numa lista
 # Colocamos no banco
 for i_ing in range(0, len(lista_ingredientes)):
-    cursor.execute('insert into ingredientes_new (id, ingrediente) values (?, ?)', (i_ing + 1, lista_ingredientes[i_ing]))
+    cursor.execute('insert into ingredientes_new (id, ingrediente) values (?, ?)', (i_ing + 1, lista_ingredientes[i_ing][0]))
 
 conn.commit()
 
@@ -68,15 +68,16 @@ conn.commit()
 cursor.execute('''create table joint_new
 (
 id_receita integer,
-id_ingrediente integer
+id_ingrediente integer,
+quantidade text
 )
 ''')
 
 for key, value in lista_receitas.items():
     if key != 1:
         for i in range(0, len(lista_ingredientes)):
-            if lista_ingredientes[i] in value:
-                cursor.execute('insert into joint_new (id_receita, id_ingrediente) values (?, ?)', (key, i+1))
+            if lista_ingredientes[i][0] in value:
+                cursor.execute('insert into joint_new (id_receita, id_ingrediente, quantidade) values (?, ?, ?)', (key, i+1, lista_ingredientes[i][1]))
 
 conn.commit()
 

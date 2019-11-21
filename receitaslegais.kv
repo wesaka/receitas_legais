@@ -39,13 +39,12 @@ ScreenManager:
 
 
 <DetalheReceita>
-    BoxLayout:
-        id: boxreceita
+    ScrollView:
+        do_scroll_y: True
 
         Label:
-            halign: 'center'
-            valign: 'middle'
-            text_size: self.size
-            markup: True
-            id: idreceita
+            id: boxreceita
+            size_hint_y: None
+            text_size: self.width, None
+            height: self.texture_size[1]
 
