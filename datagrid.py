@@ -83,7 +83,7 @@ class ListRow(RecycleDataViewBehavior, BoxLayout):
     # Adiciona a seleção por touch_down
     def on_touch_down(self, touch):
         if super().on_touch_down(touch):
-            return True
+            return False
         if self.collide_point(*touch.pos) and self.selectable:
             # Mudar a tela para a receita
             App.get_running_app().selecionado = self.index

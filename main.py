@@ -110,10 +110,14 @@ class Ingredientes(Screen):
         rank = self.buscar()
         itens_possiveis = []
 
-        if len(rank) == 0:
+        for item in rank:
+            if item[1] >= float(1.0):
+                itens_possiveis.append(item)
+
+        if len(itens_possiveis) == 0:
             popup = Popup(
                 content=Label(
-                    text='Desculpe. Não foi encontrada nenhuma receita com esses ingredientes, tente com outros.',
+                    text='Desculpe. Não foi encontrada nenhuma receita com todos esses ingredientes, tente com outros.',
                     halign='center',
                     valign='middle',
                     text_size=(180, 100)),
@@ -123,10 +127,6 @@ class Ingredientes(Screen):
             popup.open()
 
             return
-
-        for item in rank:
-            if item[1] >= float(1.0):
-                itens_possiveis.append(item)
 
         # Mudar tela para os resultados da pesquisa
         self.mudar_tela(itens_possiveis)
@@ -165,6 +165,9 @@ class Ingredientes(Screen):
         self.manager.transition.direction = 'left'
         self.manager.current = 'lista'
 
+    def on_leave(self, *args):
+        self.ids.ingredientes.text = ''
+
 
 # Cria a janela das receitas encontradas
 class ListaReceitas(Screen):
@@ -177,6 +180,11 @@ class ListaReceitas(Screen):
             self.ids.listaReceitas.add_row(ReceitaListaItem(receita[0].nome, receita[2], receita[3]))
 
     def mudar_para_detalhe(self):
+        selecionado = App.get_running_app().selecionado
+
+        if selecionado is None:
+            return
+
         self.manager.transition.direction = 'left'
         self.manager.current = 'detalhe'
 
@@ -209,6 +217,8 @@ class DetalheReceita(Screen):
         list_text = []
         label: Label = self.ids.boxreceita
 
+        list_text.append("[b]" + item_selecionado[0].nome + "[/b]\n\n")
+
         for item in lista:
             list_text.append('%s - %s\n' % (str(item[0]).capitalize(), item[1]))
 
@@ -217,7 +227,12 @@ class DetalheReceita(Screen):
 
         label.text = ''.join(list_text)
 
-        # TODO colocar bonito os ingredientes necessarios pra cada receita e quais ingredientes têm na tela anterior
+    def voltar_para_inicio(self):
+        self.manager.transition.direction = 'right'
+        self.manager.current = 'buscar'
+
+        App.get_running_app().temp = None
+        App.get_running_app().selecionado = None
 
 
 # Classe do aplicativo
